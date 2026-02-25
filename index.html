@@ -894,6 +894,34 @@
       <div class="letter-body" id="vBody"></div>
       <div class="letter-closing" id="vClosing"></div>
       <div class="letter-signature" id="vSignature"></div>
+
+      <!-- Enclosed photograph -->
+      <div id="vPhotoWrap" style="display:none;margin-top:36px;text-align:center;">
+        <div style="
+          display:inline-block;
+          padding:10px 10px 30px;
+          background:#f0ead8;
+          box-shadow:2px 3px 12px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15);
+          transform:rotate(-1.2deg);
+          position:relative;
+        ">
+          <img id="vPhoto" src="" alt="Enclosed photograph" style="
+            display:block;
+            max-width:100%;
+            max-height:340px;
+            object-fit:contain;
+            filter:sepia(0.18) contrast(1.04);
+          ">
+          <div style="
+            position:absolute;bottom:8px;left:0;right:0;
+            text-align:center;
+            font-family:'Pinyon Script',cursive;
+            font-size:0.85rem;
+            color:rgba(44,36,16,0.45);
+            pointer-events:none;
+          ">enclosed with care</div>
+        </div>
+      </div>
     </div>
     <button class="letter-delete" id="deleteLetter">Burn this letter</button>
   </div>
@@ -944,6 +972,37 @@
       </div>
     </div>
 
+    <div class="form-divider" style="margin-top:8px;"></div>
+    <div class="form-row" style="margin-top:16px;">
+      <label class="form-label">Enclose a Photograph <span style="opacity:0.5;font-family:'IM Fell English',serif;font-style:italic;letter-spacing:0;text-transform:none;">(optional)</span></label>
+      <label id="fPhotoLabel" style="
+        display:flex;align-items:center;justify-content:center;gap:10px;
+        border:1px dashed rgba(100,80,40,0.4);
+        padding:14px;cursor:pointer;
+        background:rgba(245,240,208,0.3);
+        color:var(--ink-mid);font-size:0.85rem;font-style:italic;
+        transition:all 0.2s;
+      " onmouseover="this.style.background='rgba(245,240,208,0.55)'" onmouseout="this.style.background='rgba(245,240,208,0.3)'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6a5830" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        Choose an image…
+        <input type="file" id="fPhoto" accept="image/*" style="display:none;" onchange="
+          const f=this.files[0];
+          const prev=document.getElementById('fPhotoPreview');
+          const lbl=document.getElementById('fPhotoLabel');
+          if(f){
+            const r=new FileReader();
+            r.onload=e=>{prev.src=e.target.result;prev.style.display='block';};
+            r.readAsDataURL(f);
+            lbl.childNodes[2].textContent=' '+f.name;
+          }
+        ">
+      </label>
+      <img id="fPhotoPreview" style="display:none;width:100%;max-height:200px;object-fit:contain;margin-top:10px;border:1px solid rgba(100,80,40,0.25);padding:4px;background:rgba(245,240,208,0.5);">
+    </div>
+
     <button class="form-submit" id="fSubmit">Seal & Save Letter</button>
   </div>
 </div>
@@ -977,7 +1036,8 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
   // =====================================================
   //   PASTE YOUR FIREBASE CONFIG HERE
@@ -994,7 +1054,8 @@
   // =====================================================
 
   const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const db      = getFirestore(app);
+  const storage = getStorage(app);
   const LETTERS_COL = 'letters';
 
   // ===== SEED LETTER =====
@@ -1019,13 +1080,13 @@ I know this has been sappy, but the short of it is: thank you for being an amazi
   };
 
   async function loadLetters() {
-    const snap = await getDocs(query(collection(db, LETTERS_COL), orderBy('date', 'desc')));
+    const snap = await getDocs(collection(db, LETTERS_COL));
     if (snap.empty) {
       // Seed the Franzine letter on first load
       await setDoc(doc(db, LETTERS_COL, FRANZINE_LETTER.id), FRANZINE_LETTER);
       return [FRANZINE_LETTER];
     }
-    return snap.docs.map(d => d.data());
+    return snap.docs.map(d => d.data()).sort((a,b) => (b.date||'').localeCompare(a.date||''));
   }
 
   async function saveLetter(letter) {
@@ -1033,7 +1094,20 @@ I know this has been sappy, but the short of it is: thank you for being an amazi
   }
 
   async function deleteLetter(id) {
+    const letter = letters.find(l => l.id === id);
+    if (letter?.photoPath) {
+      try { await deleteObject(ref(storage, letter.photoPath)); } catch(e) {}
+    }
     await deleteDoc(doc(db, LETTERS_COL, id));
+  }
+
+  async function uploadPhoto(file, letterId) {
+    const ext = file.name.split('.').pop();
+    const path = `letter-photos/${letterId}.${ext}`;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    return { url, path };
   }
 
   let letters = [];
@@ -1182,6 +1256,17 @@ I know this has been sappy, but the short of it is: thank you for being an amazi
     });
     document.getElementById('vClosing').textContent = letter.closing||'Sincerely,';
     document.getElementById('vSignature').textContent = letter.signature||letter.from||'';
+
+    // Photo
+    const photoWrap = document.getElementById('vPhotoWrap');
+    const photoEl = document.getElementById('vPhoto');
+    if (letter.photoUrl) {
+      photoEl.src = letter.photoUrl;
+      photoWrap.style.display = 'block';
+    } else {
+      photoWrap.style.display = 'none';
+      photoEl.src = '';
+    }
   }
 
   function closeAll() {
@@ -1229,12 +1314,28 @@ I know this has been sappy, but the short of it is: thank you for being an amazi
     const closing=document.getElementById('fClosing').value.trim();
     const signature=document.getElementById('fSignature').value.trim();
     if (!to&&!body){alert('Please fill in at least a recipient and body.');return;}
-    const newLetter={id:'letter-'+Date.now(),to,from,date,salutation:salutation||`Dear ${to},`,body,closing:closing||'Sincerely,',signature:signature||from};
+    const id = 'letter-'+Date.now();
+    const newLetter={id,to,from,date,salutation:salutation||`Dear ${to},`,body,closing:closing||'Sincerely,',signature:signature||from};
+
+    // Handle photo upload
+    const photoFile = document.getElementById('fPhoto').files[0];
     setLoading(true);
+    if (photoFile) {
+      try {
+        const { url, path } = await uploadPhoto(photoFile, id);
+        newLetter.photoUrl = url;
+        newLetter.photoPath = path;
+      } catch(e) {
+        console.warn('Photo upload failed:', e);
+      }
+    }
+
     await saveLetter(newLetter);
     letters.unshift(newLetter);
     setLoading(false);
     ['fTo','fFrom','fSalutation','fBody','fClosing','fSignature'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fPhoto').value='';
+    document.getElementById('fPhotoPreview').style.display='none';
     document.getElementById('addModal').classList.remove('visible');
     document.body.style.overflow='';
     if (date){const[y,m]=date.split('-').map(Number);currentYear=y;currentMonth=m-1;}
