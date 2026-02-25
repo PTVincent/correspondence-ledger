@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Correspondence Ledger</title>
+<link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --crimson: #5a0a0a;
+    --crimson-light: #7a1010;
+    --crimson-dark: #3d0606;
+    --gold: #c9962a;
+    --gold-pale: #e8c96a;
+    --parchment: #f5f0d0;
+    --parchment-dark: #ede8c5;
+    --ink-dark: #1a2855;
+    --ink-brown: #2c2410;
+    --ink-mid: #6a5830;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: var(--crimson);
+    font-family: 'IM Fell English', serif;
+    color: var(--parchment);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 15% 20%, #7a1010 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 80%, #3d0606 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, #6b0d0d 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ============ HEADER ============ */
+  .header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 40px 20px 20px;
+  }
+  .header-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .ornament-line {
+    height: 1px;
+    width: 120px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+  .ornament-diamond {
+    width: 8px; height: 8px;
+    background: var(--gold);
+    transform: rotate(45deg);
+  }
+  .title {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 3.8rem;
+    color: var(--parchment);
+    text-shadow: 0 2px 20px rgba(201,150,42,0.4);
+    letter-spacing: 0.02em;
+  }
+  .subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    opacity: 0.85;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  /* ============ MAIN LAYOUT ============ */
+  .main {
+    position: relative;
+    z-index: 10;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px 60px;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 32px;
+    align-items: start;
+  }
+
+  @media (max-width: 820px) {
+    .main { grid-template-columns: 1fr; }
+  }
+
+  /* ============ CALENDAR ============ */
+  .calendar-wrap {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(201,150,42,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,150,42,0.2);
+  }
+
+  .cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(201,150,42,0.25);
+  }
+  .cal-nav-btn {
+    background: none;
+    border: 1px solid rgba(201,150,42,0.4);
+    color: var(--gold);
+    width: 34px; height: 34px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .cal-nav-btn:hover { background: rgba(201,150,42,0.15); border-color: var(--gold); }
+  .cal-month-label {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    color: var(--parchment);
+  }
+
+  .cal-grid-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid rgba(201,150,42,0.2);
+  }
+  .cal-dow {
+    text-align: center;
+    padding: 10px 4px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    opacity: 0.8;
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 8px;
+    gap: 4px;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.18s;
+    min-height: 52px;
+  }
+  .cal-day:not(.empty):hover { background: rgba(201,150,42,0.12); }
+  .cal-day.today { background: rgba(201,150,42,0.15); }
+  .cal-day.today .cal-day-num {
+    color: var(--gold-pale);
+    font-weight: bold;
+  }
+  .cal-day.has-letters .cal-day-num {
+    color: var(--parchment);
+  }
+  .cal-day.selected { background: rgba(201,150,42,0.22) !important; outline: 1px solid rgba(201,150,42,0.5); }
+  .cal-day.empty { cursor: default; opacity: 0.2; }
+  .cal-day-num {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: rgba(245,240,208,0.55);
+    line-height: 1;
+  }
+  .cal-dots {
+    display: flex;
+    gap: 3px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 32px;
+  }
+  .cal-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0.85;
+  }
+  .cal-dot.extra { background: var(--gold-pale); opacity: 0.6; }
+
+  /* ============ RIGHT PANEL ============ */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel-box {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(201,150,42,0.25);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .panel-box-header {
+    padding: 12px 18px;
+    background: rgba(0,0,0,0.25);
+    border-bottom: 1px solid rgba(201,150,42,0.2);
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-box-body { padding: 16px 18px; }
+
+  /* Add letter button */
+  .add-btn {
+    background: linear-gradient(135deg, rgba(201,150,42,0.25), rgba(201,150,42,0.1));
+    border: 1px solid rgba(201,150,42,0.5);
+    color: var(--parchment);
+    padding: 12px 20px;
+    width: 100%;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.25s;
+  }
+  .add-btn:hover {
+    background: linear-gradient(135deg, rgba(201,150,42,0.4), rgba(201,150,42,0.2));
+    border-color: var(--gold);
+    box-shadow: 0 4px 16px rgba(201,150,42,0.2);
+  }
+  .add-btn svg { opacity: 0.8; }
+
+  /* Letter list */
+  .letter-list { display: flex; flex-direction: column; gap: 8px; }
+  .letter-item {
+    padding: 10px 14px;
+    border: 1px solid rgba(201,150,42,0.2);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(0,0,0,0.15);
+  }
+  .letter-item:hover {
+    background: rgba(201,150,42,0.1);
+    border-color: rgba(201,150,42,0.4);
+  }
+  .letter-item-date {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+  .letter-item-to {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 1.35rem;
+    color: var(--parchment);
+    line-height: 1.2;
+  }
+  .letter-item-from {
+    font-style: italic;
+    font-size: 0.72rem;
+    color: rgba(245,240,208,0.55);
+    margin-top: 2px;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: rgba(245,240,208,0.4);
+  }
+
+  /* ============ MODAL OVERLAY ============ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30,0,0,0.92);
+    z-index: 100;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .modal-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal-close {
+    position: fixed;
+    top: 20px; right: 24px;
+    background: none;
+    border: 1px solid rgba(201,150,42,0.4);
+    color: var(--gold);
+    width: 36px; height: 36px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 110;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: rgba(201,150,42,0.15); border-color: var(--gold); }
+
+  /* ============ ENVELOPE SCENE (inside modal) ============ */
+  #env-scene {
+    position: fixed;
+    inset: 0;
+    z-index: 105;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.7s ease;
+  }
+  #env-scene.env-active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  #env-scene.env-hiding {
+    opacity: 0;
+    transform: scale(0.85) translateY(30px);
+    pointer-events: none;
+  }
+  @keyframes envDrop {
+    from { opacity: 0; transform: translateY(-60px) scale(0.92); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  #env-scene.env-active #envelope {
+    animation: envDrop 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  #envelope {
+    width: 480px;
+    max-width: 92vw;
+    position: relative;
+    cursor: pointer;
+    filter: drop-shadow(0 20px 60px rgba(0,0,0,0.7));
+    transition: filter 0.3s ease;
+  }
+  #envelope:not(.opened):hover {
+    filter: drop-shadow(0 24px 70px rgba(0,0,0,0.8)) drop-shadow(0 0 20px rgba(200,150,40,0.35));
+  }
+  #env-clip { position: relative; border-radius: 3px; }
+  #env-body {
+    width: 100%;
+    padding-top: 62%;
+    background: #f5f0d0;
+    background-image: linear-gradient(135deg, rgba(200,180,100,0.2) 0%, rgba(220,200,140,0.05) 50%, rgba(200,180,100,0.15) 100%);
+    position: relative;
+    z-index: 2;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  #env-body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to bottom right, transparent calc(50% - 0.5px), rgba(180,150,80,0.25) 50%, transparent calc(50% + 0.5px)),
+      linear-gradient(to bottom left,  transparent calc(50% - 0.5px), rgba(180,150,80,0.25) 50%, transparent calc(50% + 0.5px));
+  }
+  #env-body::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, rgba(235,220,175,0.0), rgba(225,210,160,0.5));
+    clip-path: polygon(0 100%, 50% 0%, 100% 100%);
+  }
+  .env-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 30px 24px;
+    gap: 6px;
+  }
+  .env-to {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 2rem;
+    color: #2c2410;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .env-from {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: #6a5830;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+  .env-divider {
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #b8962a, transparent);
+    margin: 4px 0;
+  }
+  .env-stamp {
+    position: absolute;
+    top: 14px; right: 18px;
+    width: 48px; height: 60px;
+  }
+  .env-postmark {
+    position: absolute;
+    top: 10px; right: 52px;
+    width: 60px; height: 60px;
+    opacity: 0.25;
+  }
+  #letter-peek {
+    position: relative;
+    left: 8%; right: 8%;
+    width: 84%;
+    height: 220px;
+    background: #f5f0d0;
+    background-image: linear-gradient(135deg, rgba(200,180,100,0.1) 0%, rgba(220,200,140,0.04) 100%);
+    border-radius: 2px 2px 0 0;
+    transform: translateY(0);
+    margin-top: -220px;
+    transition: transform 1s cubic-bezier(0.34, 1.3, 0.64, 1) 0.55s;
+    z-index: 1;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    border-top: 1.5px solid rgba(180,150,80,0.5);
+    border-left: 1.5px solid rgba(180,150,80,0.3);
+    border-right: 1.5px solid rgba(180,150,80,0.3);
+    overflow: hidden;
+  }
+  #envelope.opened #letter-peek { transform: translateY(-140px); }
+  #env-flap-wrapper {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 0;
+    perspective: 900px;
+    transform-style: preserve-3d;
+    z-index: 5;
+  }
+  #env-flap {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 200px;
+    transform-origin: top center;
+    transform: rotateX(0deg);
+    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+  #env-flap-face {
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 100%;
+    background: #ede8c5;
+    background-image: linear-gradient(160deg, rgba(210,195,140,0.6) 0%, rgba(240,230,190,0.3) 60%);
+    clip-path: polygon(0 0, 100% 0, 50% 62%);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+  }
+  .flap-seal {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 2;
+  }
+  #envelope.opened #env-flap { transform: rotateX(-185deg); }
+  #envelope.flap-behind #env-flap-wrapper { z-index: 0; }
+  .env-hint {
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    color: rgba(201,150,42,0.6);
+    white-space: nowrap;
+    animation: hintPulse 2s ease-in-out infinite;
+  }
+  @keyframes hintPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* ============ LETTER VIEWER ============ */
+  .paper {
+    position: relative;
+    width: 680px;
+    max-width: 100%;
+    background-color: var(--parchment);
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.85  0 0 0 0 0.78  0 0 0 0 0.6  0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23paper)' opacity='1'/%3E%3C/svg%3E"),
+      linear-gradient(135deg, rgba(200,180,100,0.15) 0%, rgba(220,200,140,0.08) 50%, rgba(200,180,100,0.12) 100%);
+    padding: 60px 70px;
+    box-shadow: 0 10px 60px rgba(0,0,0,0.7), inset 0 0 80px rgba(180,150,80,0.1);
+    transform: rotate(-0.3deg) translateY(20px);
+    opacity: 0;
+    transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+  }
+  .modal-overlay.visible .paper {
+    opacity: 1;
+    transform: rotate(-0.3deg) translateY(0);
+  }
+  .paper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(102deg, transparent 49.8%, rgba(160,130,70,0.12) 49.9%, transparent 50.1%),
+      linear-gradient(5deg, transparent 49.8%, rgba(160,130,70,0.1) 49.9%, transparent 50.1%);
+    pointer-events: none;
+  }
+  .border-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .letter-content { position: relative; z-index: 1; }
+  .letter-date {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 1.3rem;
+    color: #2a3a6e;
+    text-align: right;
+    margin-bottom: 24px;
+    opacity: 0.85;
+  }
+  .letter-salutation {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 2.2rem;
+    color: #1a2855;
+    margin-bottom: 20px;
+  }
+  .letter-body p {
+    font-size: 1.02rem;
+    line-height: 1.9;
+    color: var(--ink-brown);
+    margin-bottom: 16px;
+    text-align: justify;
+    text-indent: 2em;
+  }
+  .letter-body p:first-of-type::first-letter {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 3.8rem;
+    float: left;
+    line-height: 0.75;
+    margin-right: 6px;
+    margin-top: 8px;
+    color: #1a2855;
+  }
+  .letter-closing {
+    margin-top: 32px;
+    font-family: 'Pinyon Script', cursive;
+    font-size: 1.6rem;
+    color: #2a3a6e;
+    line-height: 1.8;
+  }
+  .letter-signature {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 2.6rem;
+    color: #1a2855;
+    margin-top: 4px;
+  }
+  .letter-delete {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(90,10,10,0.08);
+    border: 1px solid rgba(90,10,10,0.2);
+    color: rgba(90,10,10,0.4);
+    padding: 6px 12px;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    font-family: 'Cinzel', serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .letter-delete:hover { background: rgba(90,10,10,0.15); color: rgba(90,10,10,0.7); border-color: rgba(90,10,10,0.4); }
+
+  /* ============ ADD LETTER FORM ============ */
+  .form-paper {
+    width: 680px;
+    max-width: 100%;
+    background-color: var(--parchment);
+    background-image: linear-gradient(135deg, rgba(200,180,100,0.15) 0%, rgba(220,200,140,0.08) 50%, rgba(200,180,100,0.12) 100%);
+    padding: 50px 60px;
+    box-shadow: 0 10px 60px rgba(0,0,0,0.7);
+    position: relative;
+  }
+  .form-title {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 2.4rem;
+    color: #1a2855;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .form-row { margin-bottom: 18px; }
+  .form-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-mid);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .form-input, .form-textarea {
+    width: 100%;
+    background: rgba(245,240,208,0.6);
+    border: 1px solid rgba(100,80,40,0.3);
+    border-bottom: 1.5px solid rgba(100,80,40,0.6);
+    padding: 10px 12px;
+    font-family: 'IM Fell English', serif;
+    font-size: 1rem;
+    color: var(--ink-brown);
+    outline: none;
+    border-radius: 0;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .form-input:focus, .form-textarea:focus {
+    background: rgba(245,240,208,0.9);
+    border-color: rgba(100,80,40,0.8);
+    border-bottom-color: var(--ink-dark);
+  }
+  .form-textarea { min-height: 220px; resize: vertical; line-height: 1.8; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-submit {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(26,40,85,0.9), rgba(26,40,85,0.7));
+    border: 1px solid rgba(26,40,85,0.5);
+    color: var(--parchment);
+    padding: 14px 24px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 24px;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .form-submit:hover {
+    background: linear-gradient(135deg, rgba(26,40,85,1), rgba(26,40,85,0.85));
+    box-shadow: 0 4px 16px rgba(26,40,85,0.3);
+  }
+  .form-divider {
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(100,80,40,0.4), transparent);
+    margin: 20px auto;
+  }
+
+  /* ============ BG SVG ORNAMENTS ============ */
+  .bg-ornaments {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
+  }
+  .bg-ornaments svg { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<div class="bg-ornaments">
+<svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="corner-sm" viewBox="-60 -60 120 120">
+      <circle cx="0" cy="0" r="54" fill="none" stroke="#c9962a" stroke-width="1" stroke-dasharray="5 3"/>
+      <circle cx="0" cy="0" r="46" fill="none" stroke="#c9962a" stroke-width="0.5"/>
+      <ellipse cx="0" cy="-38" rx="7" ry="13" fill="#c9962a" opacity="0.65"/>
+      <ellipse cx="0" cy="-38" rx="7" ry="13" fill="#c9962a" opacity="0.65" transform="rotate(45)"/>
+      <ellipse cx="0" cy="-38" rx="7" ry="13" fill="#c9962a" opacity="0.65" transform="rotate(90)"/>
+      <ellipse cx="0" cy="-38" rx="7" ry="13" fill="#c9962a" opacity="0.65" transform="rotate(135)"/>
+      <ellipse cx="0" cy="-38" rx="7" ry="13" fill="#c9962a" opacity="0.65" transform="rotate(180)"/>
+      <ellipse cx="0" cy="-38" rx="7" ry="13" fill="#c9962a" opacity="0.65" transform="rotate(225)"/>
+      <ellipse cx="0" cy="-38" rx="7" ry="13" fill="#c9962a" opacity="0.65" transform="rotate(270)"/>
+      <ellipse cx="0" cy="-38" rx="7" ry="13" fill="#c9962a" opacity="0.65" transform="rotate(315)"/>
+      <polygon points="0,-18 5,-5 18,0 5,5 0,18 -5,5 -18,0 -5,-5" fill="#c9962a" opacity="0.85"/>
+      <circle cx="0" cy="0" r="6" fill="#c9962a"/>
+      <circle cx="0" cy="0" r="3" fill="#5a0a0a"/>
+    </symbol>
+  </defs>
+  <g opacity="0.4"><use href="#corner-sm" x="0" y="0" width="120" height="120"/></g>
+  <g opacity="0.38" transform="scale(-1,1) translate(-1440,0)"><use href="#corner-sm" x="0" y="0" width="120" height="120"/></g>
+  <g opacity="0.38" transform="scale(1,-1) translate(0,-900)"><use href="#corner-sm" x="0" y="0" width="120" height="120"/></g>
+  <g opacity="0.36" transform="scale(-1,-1) translate(-1440,-900)"><use href="#corner-sm" x="0" y="0" width="120" height="120"/></g>
+  <g fill="#c9962a" opacity="0.18">
+    <polygon points="720,6 724,12 720,18 716,12"/>
+    <polygon points="706,6 710,12 706,18 702,12"/>
+    <polygon points="734,6 738,12 734,18 730,12"/>
+    <polygon points="720,882 724,888 720,894 716,888"/>
+    <polygon points="706,882 710,888 706,894 702,888"/>
+    <polygon points="734,882 738,888 734,894 730,888"/>
+    <polygon points="6,450 12,454 18,450 12,446"/>
+    <polygon points="6,436 12,440 18,436 12,432"/>
+    <polygon points="6,464 12,468 18,464 12,460"/>
+    <polygon points="1422,450 1428,454 1434,450 1428,446"/>
+    <polygon points="1422,436 1428,440 1434,436 1428,432"/>
+    <polygon points="1422,464 1428,468 1434,464 1428,460"/>
+  </g>
+</svg>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-ornament">
+    <div class="ornament-line"></div>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12,2 L14,9 L21,9 L15.5,13.5 L17.5,21 L12,16.5 L6.5,21 L8.5,13.5 L3,9 L10,9 Z" fill="#c9962a" opacity="0.85"/>
+      <circle cx="12" cy="12" r="3" fill="#5a0a0a"/>
+    </svg>
+    <div class="ornament-line"></div>
+  </div>
+  <div class="title">The Correspondence Ledger</div>
+  <div class="subtitle">A record of letters written & received</div>
+  <div class="header-ornament" style="margin-top:12px">
+    <div class="ornament-line"></div>
+    <div class="ornament-diamond"></div>
+    <div class="ornament-line"></div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- CALENDAR -->
+  <div class="calendar-wrap">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" id="prevMonth">&#8249;</button>
+      <div class="cal-month-label" id="monthLabel">—</div>
+      <button class="cal-nav-btn" id="nextMonth">&#8250;</button>
+    </div>
+    <div class="cal-grid-header">
+      <div class="cal-dow">Sun</div>
+      <div class="cal-dow">Mon</div>
+      <div class="cal-dow">Tue</div>
+      <div class="cal-dow">Wed</div>
+      <div class="cal-dow">Thu</div>
+      <div class="cal-dow">Fri</div>
+      <div class="cal-dow">Sat</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+    <button class="add-btn" id="addBtn">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="7" y1="1" x2="7" y2="13" stroke="#c9962a" stroke-width="1.5"/>
+        <line x1="1" y1="7" x2="13" y2="7" stroke="#c9962a" stroke-width="1.5"/>
+      </svg>
+      Compose a New Letter
+    </button>
+
+    <div class="panel-box">
+      <div class="panel-box-header">
+        <span id="panelTitle">All Letters</span>
+        <span id="panelCount" style="font-size:0.6rem;opacity:0.6"></span>
+      </div>
+      <div class="panel-box-body">
+        <div class="letter-list" id="letterList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BACKDROP (dimming layer) -->
+<div id="modalBackdrop" style="position:fixed;inset:0;z-index:99;background:rgba(20,0,0,0.92);opacity:0;pointer-events:none;transition:opacity 0.4s ease;"></div>
+
+<!-- CLOSE BUTTON (always on top) -->
+<button class="modal-close" id="viewClose" style="display:none;">✕</button>
+
+<!-- ENVELOPE SCENE -->
+<div id="env-scene">
+  <div style="position:relative;">
+    <div id="envelope">
+      <div id="env-clip">
+        <div id="env-body">
+          <div class="env-inner">
+            <svg class="env-stamp" viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="44" height="56" rx="1" fill="#f5f0d0" stroke="#c9962a" stroke-width="1.5"/>
+              <g fill="#5a0a0a" opacity="0.5">
+                <circle cx="2" cy="8" r="1.2"/><circle cx="2" cy="14" r="1.2"/><circle cx="2" cy="20" r="1.2"/>
+                <circle cx="2" cy="26" r="1.2"/><circle cx="2" cy="32" r="1.2"/><circle cx="2" cy="38" r="1.2"/>
+                <circle cx="2" cy="44" r="1.2"/><circle cx="2" cy="50" r="1.2"/>
+                <circle cx="46" cy="8" r="1.2"/><circle cx="46" cy="14" r="1.2"/><circle cx="46" cy="20" r="1.2"/>
+                <circle cx="46" cy="26" r="1.2"/><circle cx="46" cy="32" r="1.2"/><circle cx="46" cy="38" r="1.2"/>
+                <circle cx="46" cy="44" r="1.2"/><circle cx="46" cy="50" r="1.2"/>
+                <circle cx="8" cy="2" r="1.2"/><circle cx="14" cy="2" r="1.2"/><circle cx="20" cy="2" r="1.2"/>
+                <circle cx="26" cy="2" r="1.2"/><circle cx="32" cy="2" r="1.2"/><circle cx="38" cy="2" r="1.2"/>
+                <circle cx="8" cy="58" r="1.2"/><circle cx="14" cy="58" r="1.2"/><circle cx="20" cy="58" r="1.2"/>
+                <circle cx="26" cy="58" r="1.2"/><circle cx="32" cy="58" r="1.2"/><circle cx="38" cy="58" r="1.2"/>
+              </g>
+              <circle cx="24" cy="30" r="14" fill="none" stroke="#c9962a" stroke-width="0.8"/>
+              <polygon points="24,18 27,26 36,26 29,31 32,40 24,35 16,40 19,31 12,26 21,26" fill="#c9962a" opacity="0.7"/>
+              <circle cx="24" cy="30" r="4" fill="#c9962a" opacity="0.9"/>
+            </svg>
+            <svg class="env-postmark" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="30" cy="30" r="27" fill="none" stroke="#5a0a0a" stroke-width="2"/>
+              <circle cx="30" cy="30" r="22" fill="none" stroke="#5a0a0a" stroke-width="1"/>
+              <text x="30" y="26" text-anchor="middle" font-size="5" font-family="serif" fill="#5a0a0a" id="envPostmarkDate">FEB 24</text>
+              <text x="30" y="34" text-anchor="middle" font-size="4.5" font-family="serif" fill="#5a0a0a" id="envPostmarkYear">2026</text>
+              <line x1="6" y1="40" x2="54" y2="40" stroke="#5a0a0a" stroke-width="1.5"/>
+              <line x1="6" y1="44" x2="54" y2="44" stroke="#5a0a0a" stroke-width="1.5"/>
+              <line x1="6" y1="48" x2="54" y2="48" stroke="#5a0a0a" stroke-width="1.5"/>
+            </svg>
+            <div class="env-divider"></div>
+            <div class="env-to" id="envTo">To: —</div>
+            <div class="env-from" id="envFrom">— with love</div>
+            <div class="env-divider"></div>
+          </div>
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 480 300" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="6" width="468" height="288" rx="2" fill="none" stroke="#c9962a" stroke-width="1.5" opacity="0.6"/>
+            <rect x="12" y="12" width="456" height="276" rx="1" fill="none" stroke="#c9962a" stroke-width="0.6" stroke-dasharray="4 3" opacity="0.5"/>
+          </svg>
+        </div>
+        <div id="letter-peek"></div>
+      </div>
+      <div id="env-flap-wrapper">
+        <div id="env-flap">
+          <div id="env-flap-face">
+            <svg style="position:absolute;top:0;left:0;width:100%;height:130px;pointer-events:none" viewBox="0 0 480 130" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6,6 L474,6 L240,120 Z" fill="none" stroke="#c9962a" stroke-width="1.2" opacity="0.6"/>
+            </svg>
+            <svg class="flap-seal" width="52" height="52" viewBox="-26 -26 52 52" xmlns="http://www.w3.org/2000/svg">
+              <circle r="24" fill="#c9962a" opacity="0.15"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(30)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(60)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(90)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(120)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(150)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(180)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(210)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(240)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(270)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(300)"/>
+              <polygon points="0,-24 2,-18 0,-12 -2,-18" fill="#c9962a" opacity="0.5" transform="rotate(330)"/>
+              <circle r="16" fill="#c9962a" opacity="0.85"/>
+              <circle r="13" fill="none" stroke="#f5f0d0" stroke-width="0.8" opacity="0.6"/>
+              <text y="5" text-anchor="middle" font-size="14" font-family="Pinyon Script, cursive" fill="#f5f0d0" opacity="0.95" id="envSealInitial">P</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="env-hint" id="envHint">click to open</div>
+  </div>
+</div>
+
+<!-- LETTER VIEWER (inside modal flow) -->
+<div class="modal-overlay" id="viewModal">
+  <div class="paper" id="viewPaper">
+    <svg class="border-svg" viewBox="0 0 680 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="14" y="14" width="652" height="872" rx="3" fill="none" stroke="#1e3a8a" stroke-width="2.5"/>
+      <rect x="22" y="22" width="636" height="856" rx="2" fill="none" stroke="#1e3a8a" stroke-width="0.8" stroke-dasharray="4 3"/>
+      <rect x="30" y="30" width="620" height="840" rx="1" fill="none" stroke="#1e3a8a" stroke-width="1.2"/>
+      <g transform="translate(14,14)"><circle cx="16" cy="16" r="5" fill="#1e3a8a"/><ellipse cx="16" cy="8" rx="3" ry="5" fill="#1e3a8a"/><ellipse cx="9" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="23" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/><circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/></g>
+      <g transform="translate(666,14) scale(-1,1)"><circle cx="16" cy="16" r="5" fill="#1e3a8a"/><ellipse cx="16" cy="8" rx="3" ry="5" fill="#1e3a8a"/><ellipse cx="9" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="23" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/><circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/></g>
+      <g transform="translate(14,886) scale(1,-1)"><circle cx="16" cy="16" r="5" fill="#1e3a8a"/><ellipse cx="16" cy="8" rx="3" ry="5" fill="#1e3a8a"/><ellipse cx="9" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="23" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/><circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/></g>
+      <g transform="translate(666,886) scale(-1,-1)"><circle cx="16" cy="16" r="5" fill="#1e3a8a"/><ellipse cx="16" cy="8" rx="3" ry="5" fill="#1e3a8a"/><ellipse cx="9" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="23" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/><circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/></g>
+      <g transform="translate(340,14)"><polygon points="0,-10 7,0 0,10 -7,0" fill="#1e3a8a"/><polygon points="0,-6 4,0 0,6 -4,0" fill="#f5f0d0"/><path d="M-7,0 C-14,-6 -22,-4 -24,0 C-22,-2 -14,-1 -7,0Z" fill="#1e3a8a"/><path d="M7,0 C14,-6 22,-4 24,0 C22,-2 14,-1 7,0Z" fill="#1e3a8a"/><path d="M-7,0 C-14,6 -22,4 -24,0 C-22,2 -14,1 -7,0Z" fill="#1e3a8a"/><path d="M7,0 C14,6 22,4 24,0 C22,2 14,1 7,0Z" fill="#1e3a8a"/><circle cx="-50" cy="0" r="2" fill="#1e3a8a"/><circle cx="-60" cy="0" r="1.5" fill="#1e3a8a"/><circle cx="50" cy="0" r="2" fill="#1e3a8a"/><circle cx="60" cy="0" r="1.5" fill="#1e3a8a"/></g>
+      <g transform="translate(340,886)"><polygon points="0,-10 7,0 0,10 -7,0" fill="#1e3a8a"/><polygon points="0,-6 4,0 0,6 -4,0" fill="#f5f0d0"/><path d="M-7,0 C-14,-6 -22,-4 -24,0 C-22,-2 -14,-1 -7,0Z" fill="#1e3a8a"/><path d="M7,0 C14,-6 22,-4 24,0 C22,-2 14,-1 7,0Z" fill="#1e3a8a"/><path d="M-7,0 C-14,6 -22,4 -24,0 C-22,2 -14,1 -7,0Z" fill="#1e3a8a"/><path d="M7,0 C14,6 22,4 24,0 C22,2 14,1 7,0Z" fill="#1e3a8a"/><circle cx="-50" cy="0" r="2" fill="#1e3a8a"/><circle cx="-60" cy="0" r="1.5" fill="#1e3a8a"/><circle cx="50" cy="0" r="2" fill="#1e3a8a"/><circle cx="60" cy="0" r="1.5" fill="#1e3a8a"/></g>
+    </svg>
+    <div class="letter-content">
+      <div class="letter-date" id="vDate"></div>
+      <div class="letter-salutation" id="vSalutation"></div>
+      <div class="letter-body" id="vBody"></div>
+      <div class="letter-closing" id="vClosing"></div>
+      <div class="letter-signature" id="vSignature"></div>
+    </div>
+    <button class="letter-delete" id="deleteLetter">Burn this letter</button>
+  </div>
+</div>
+
+<!-- MODAL: ADD LETTER FORM -->
+<div class="modal-overlay" id="addModal">
+  <button class="modal-close" id="addClose">✕</button>
+  <div class="form-paper">
+    <div class="form-title">Compose a Letter</div>
+    <div class="form-divider"></div>
+
+    <div class="form-row-2">
+      <div class="form-row">
+        <label class="form-label">To</label>
+        <input type="text" class="form-input" id="fTo" placeholder="Recipient's name">
+      </div>
+      <div class="form-row">
+        <label class="form-label">From</label>
+        <input type="text" class="form-input" id="fFrom" placeholder="Your name">
+      </div>
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-row">
+        <label class="form-label">Salutation</label>
+        <input type="text" class="form-input" id="fSalutation" placeholder="Dear Franzine,">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="fDate">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Body</label>
+      <textarea class="form-textarea" id="fBody" placeholder="Write your letter here... Separate paragraphs with a blank line."></textarea>
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-row">
+        <label class="form-label">Closing</label>
+        <input type="text" class="form-input" id="fClosing" placeholder="Sincerely,">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Signature</label>
+        <input type="text" class="form-input" id="fSignature" placeholder="Parker">
+      </div>
+    </div>
+
+    <button class="form-submit" id="fSubmit">Seal & Save Letter</button>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay" style="
+  position:fixed;inset:0;z-index:200;
+  background:rgba(20,0,0,0.88);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.4s ease;
+">
+  <div style="text-align:center;">
+    <svg width="48" height="48" viewBox="-24 -24 48 48" xmlns="http://www.w3.org/2000/svg" style="animation:spinSeal 2s linear infinite;">
+      <style>@keyframes spinSeal{to{transform:rotate(360deg);}}</style>
+      <polygon points="0,-20 2,-14 0,-8 -2,-14" fill="#c9962a" opacity="0.7"/>
+      <polygon points="0,-20 2,-14 0,-8 -2,-14" fill="#c9962a" opacity="0.7" transform="rotate(45)"/>
+      <polygon points="0,-20 2,-14 0,-8 -2,-14" fill="#c9962a" opacity="0.7" transform="rotate(90)"/>
+      <polygon points="0,-20 2,-14 0,-8 -2,-14" fill="#c9962a" opacity="0.7" transform="rotate(135)"/>
+      <polygon points="0,-20 2,-14 0,-8 -2,-14" fill="#c9962a" opacity="0.7" transform="rotate(180)"/>
+      <polygon points="0,-20 2,-14 0,-8 -2,-14" fill="#c9962a" opacity="0.7" transform="rotate(225)"/>
+      <polygon points="0,-20 2,-14 0,-8 -2,-14" fill="#c9962a" opacity="0.7" transform="rotate(270)"/>
+      <polygon points="0,-20 2,-14 0,-8 -2,-14" fill="#c9962a" opacity="0.7" transform="rotate(315)"/>
+      <circle r="10" fill="#c9962a"/>
+      <circle r="7" fill="none" stroke="#f5f0d0" stroke-width="0.8" opacity="0.6"/>
+    </svg>
+    <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.25em;color:rgba(201,150,42,0.8);margin-top:14px;">RETRIEVING CORRESPONDENCE…</div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  // =====================================================
+  //   PASTE YOUR FIREBASE CONFIG HERE
+  //   (from Firebase Console → Project Settings → Your apps)
+  // =====================================================
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAvqfZsBUqF9M1UyVxQfUvv03UxRLCGIiM",
+    authDomain:        "letters-dd8ca.firebaseapp.com",
+    projectId:         "letters-dd8ca",
+    storageBucket:     "letters-dd8ca.firebasestorage.app",
+    messagingSenderId: "368285224403",
+    appId:             "1:368285224403:web:90c7c9fc0309bda740f326"
+  };
+  // =====================================================
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const LETTERS_COL = 'letters';
+
+  // ===== SEED LETTER =====
+  const FRANZINE_LETTER = {
+    id: 'seed-franzine-2026',
+    to: 'Franzine', from: 'Parker', date: '2026-02-24',
+    salutation: 'Dear Franzine,',
+    body: `If I could, I'd hand you this letter in person. But with thousands of miles between us, this felt like the next best thing. I want you to know that I'm not sending this expecting anything in return, and that I've chosen my words carefully, because I know the sweetest ones are often the ones that cause the most rot.
+
+I'm writing this letter to tell you how grateful I am to have you as a friend. I think because we've walked through such similar circumstances, you've been able to see me in ways I didn't think anyone could, and at first, that terrified me. I kept waiting for the moment you'd see my faults and the weight I carry and decide it was too much, the way others have. But you've done the exact opposite. You've welcomed me into your life and shown me a kindness I'm still learning to believe I deserve.
+
+I still don't fully understand why you've been so good to me, but I cherish it more than I know how to say. In such a short time, you've genuinely changed my life for the better. You've reassured me, trusted me with your own secrets, and given me the space to be myself without fear of judgment. I want to match you in every way you've been there for me, and give you even more.
+
+I know we've talked about how kind words and false actions have been used to manipulate and control you, so I completely understand if part of you still questions the things I do or the compliments I give. But I hope I've made it clear that I see you as my friend first always, and that anything kind I do comes from one place only: I love seeing you happy! I don't need any other reason besides that. If you can't believe me, that's okay, because I'm fine taking all the time and effort needed so you can feel safe in my presence.
+
+If you ever need something, never hesitate to reach out. If I ever do something that upsets you, tell me as soon as you can. If you want space, I'll give you all that you need. Whatever you want from our friendship I'll do what I can to accommodate you because I have nothing but respect and admiration for you.
+
+And once again, I expect absolutely nothing from you besides your companionship, so don't ever feel obligated to do anything for me in return or act a certain way just to keep me pleased. I'm gonna be here despite the distance, different timezones, and even if we end up upset at each other for some reason.
+
+I know this has been sappy, but the short of it is: thank you for being an amazing friend! I look forward to spending more time together and I hope that I can be a positive addition to your life like you have been for me!`,
+    closing: 'Sincerely,', signature: 'Parker'
+  };
+
+  async function loadLetters() {
+    const snap = await getDocs(query(collection(db, LETTERS_COL), orderBy('date', 'desc')));
+    if (snap.empty) {
+      // Seed the Franzine letter on first load
+      await setDoc(doc(db, LETTERS_COL, FRANZINE_LETTER.id), FRANZINE_LETTER);
+      return [FRANZINE_LETTER];
+    }
+    return snap.docs.map(d => d.data());
+  }
+
+  async function saveLetter(letter) {
+    await setDoc(doc(db, LETTERS_COL, letter.id), letter);
+  }
+
+  async function deleteLetter(id) {
+    await deleteDoc(doc(db, LETTERS_COL, id));
+  }
+
+  let letters = [];
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
+  let selectedDate = null;
+  let activeViewId = null;
+  const today = new Date();
+
+  // ===== CALENDAR =====
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function renderCalendar() {
+    document.getElementById('monthLabel').textContent = `${MONTHS[currentMonth]} ${currentYear}`;
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const dateMap = {};
+    letters.forEach(l => {
+      if (!l.date) return;
+      const [y,m,d] = l.date.split('-').map(Number);
+      if (y === currentYear && (m-1) === currentMonth) dateMap[d] = (dateMap[d]||0)+1;
+    });
+    for (let i = 0; i < firstDay; i++) {
+      const el = document.createElement('div'); el.className='cal-day empty'; grid.appendChild(el);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const el = document.createElement('div'); el.className='cal-day';
+      const isToday = (d===today.getDate()&&currentMonth===today.getMonth()&&currentYear===today.getFullYear());
+      if (isToday) el.classList.add('today');
+      const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if (selectedDate === dateStr) el.classList.add('selected');
+      const count = dateMap[d]||0;
+      if (count>0) el.classList.add('has-letters');
+      const numEl = document.createElement('div'); numEl.className='cal-day-num'; numEl.textContent=d; el.appendChild(numEl);
+      if (count>0) {
+        const dots = document.createElement('div'); dots.className='cal-dots';
+        const show = Math.min(count,3);
+        for (let i=0;i<show;i++){const dot=document.createElement('div');dot.className='cal-dot'+(i>=2?' extra':'');dots.appendChild(dot);}
+        el.appendChild(dots);
+      }
+      el.addEventListener('click',()=>{selectedDate=(selectedDate===dateStr)?null:dateStr;renderCalendar();renderLetterList();});
+      grid.appendChild(el);
+    }
+  }
+  document.getElementById('prevMonth').addEventListener('click',()=>{currentMonth--;if(currentMonth<0){currentMonth=11;currentYear--;}renderCalendar();});
+  document.getElementById('nextMonth').addEventListener('click',()=>{currentMonth++;if(currentMonth>11){currentMonth=0;currentYear++;}renderCalendar();});
+
+  // ===== LETTER LIST =====
+  function formatDateLabel(ds) {
+    if (!ds) return '';
+    const [y,m,d] = ds.split('-').map(Number);
+    const mm=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${mm[m-1]} ${d}, ${y}`;
+  }
+  function renderLetterList() {
+    const list = document.getElementById('letterList');
+    const panelTitle = document.getElementById('panelTitle');
+    const panelCount = document.getElementById('panelCount');
+    let filtered = selectedDate
+      ? letters.filter(l=>l.date===selectedDate)
+      : [...letters].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    panelTitle.textContent = selectedDate ? formatDateLabel(selectedDate) : 'All Letters';
+    panelCount.textContent = filtered.length ? `${filtered.length} letter${filtered.length!==1?'s':''}` : '';
+    list.innerHTML='';
+    if (!filtered.length) { list.innerHTML=`<div class="empty-state">${selectedDate?'No letters on this date.':'No letters yet.'}</div>`; return; }
+    filtered.forEach(letter=>{
+      const item=document.createElement('div'); item.className='letter-item';
+      item.innerHTML=`<div class="letter-item-date">${formatDateLabel(letter.date)}</div><div class="letter-item-to">To: ${letter.to||'—'}</div><div class="letter-item-from">from ${letter.from||'—'}</div>`;
+      item.addEventListener('click',()=>openEnvelope(letter.id));
+      list.appendChild(item);
+    });
+  }
+
+  // ===== ENVELOPE ANIMATION =====
+  const backdrop = document.getElementById('modalBackdrop');
+  const envScene = document.getElementById('env-scene');
+  const envelope = document.getElementById('envelope');
+  const viewModal = document.getElementById('viewModal');
+  const viewClose = document.getElementById('viewClose');
+
+  function openEnvelope(id) {
+    const letter = letters.find(l=>l.id===id);
+    if (!letter) return;
+    activeViewId = id;
+
+    // Populate envelope metadata
+    document.getElementById('envTo').textContent = `To: ${letter.to||'—'}`;
+    document.getElementById('envFrom').textContent = `— from ${letter.from||'—'}`;
+    document.getElementById('envSealInitial').textContent = (letter.from||'?')[0].toUpperCase();
+
+    // Postmark date
+    if (letter.date) {
+      const [y,m,d] = letter.date.split('-').map(Number);
+      const mm=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      document.getElementById('envPostmarkDate').textContent = `${mm[m-1]} ${d}`;
+      document.getElementById('envPostmarkYear').textContent = y;
+    }
+
+    // Pre-populate letter content so it's ready after animation
+    populateLetterContent(letter);
+
+    // Reset envelope to closed state
+    envelope.classList.remove('opened','flap-behind');
+
+    // Show backdrop + envelope
+    backdrop.style.opacity='1'; backdrop.style.pointerEvents='all';
+    envScene.classList.remove('env-hiding');
+    envScene.classList.add('env-active');
+    document.getElementById('envHint').style.opacity='1';
+    viewClose.style.display='flex';
+    document.body.style.overflow='hidden';
+  }
+
+  envelope.addEventListener('click', () => {
+    if (envelope.classList.contains('opened')) return;
+    envelope.classList.add('opened');
+    document.getElementById('envHint').style.opacity='0';
+    setTimeout(()=>envelope.classList.add('flap-behind'), 550);
+
+    // Fade out envelope, show letter
+    setTimeout(()=>{
+      envScene.classList.add('env-hiding');
+    }, 2000);
+    setTimeout(()=>{
+      envScene.classList.remove('env-active','env-hiding');
+      viewModal.classList.add('visible');
+    }, 2700);
+  });
+
+  function populateLetterContent(letter) {
+    function formattedDate(ds) {
+      if (!ds) return '';
+      const [y,m,d] = ds.split('-').map(Number);
+      const ord=['','1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th','11th','12th','13th','14th','15th','16th','17th','18th','19th','20th','21st','22nd','23rd','24th','25th','26th','27th','28th','29th','30th','31st'];
+      const mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
+      return `the ${ord[d]} of ${mn[m-1]}, ${y}`;
+    }
+    document.getElementById('vDate').textContent = formattedDate(letter.date);
+    document.getElementById('vSalutation').textContent = letter.salutation||`Dear ${letter.to},`;
+    const bodyEl = document.getElementById('vBody');
+    bodyEl.innerHTML='';
+    (letter.body||'').split('\n\n').filter(p=>p.trim()).forEach(para=>{
+      const p=document.createElement('p'); p.textContent=para.trim(); bodyEl.appendChild(p);
+    });
+    document.getElementById('vClosing').textContent = letter.closing||'Sincerely,';
+    document.getElementById('vSignature').textContent = letter.signature||letter.from||'';
+  }
+
+  function closeAll() {
+    envScene.classList.remove('env-active','env-hiding');
+    viewModal.classList.remove('visible');
+    backdrop.style.opacity='0'; backdrop.style.pointerEvents='none';
+    viewClose.style.display='none';
+    document.body.style.overflow='';
+    activeViewId=null;
+  }
+
+  viewClose.addEventListener('click', closeAll);
+  backdrop.addEventListener('click', (e)=>{
+    if (e.target===backdrop) closeAll();
+  });
+
+  document.getElementById('deleteLetter').addEventListener('click', async ()=>{
+    if (!activeViewId) return;
+    if (!confirm('Are you sure you want to delete this letter?')) return;
+    setLoading(true);
+    await deleteLetter(activeViewId);
+    letters = letters.filter(l=>l.id!==activeViewId);
+    setLoading(false);
+    closeAll();
+    renderCalendar();
+    renderLetterList();
+  });
+
+  // ===== ADD LETTER =====
+  document.getElementById('addBtn').addEventListener('click',()=>{
+    const todayStr=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    document.getElementById('fDate').value=todayStr;
+    document.getElementById('addModal').classList.add('visible');
+    document.body.style.overflow='hidden';
+  });
+  document.getElementById('addClose').addEventListener('click',()=>{ document.getElementById('addModal').classList.remove('visible'); document.body.style.overflow=''; });
+  document.getElementById('addModal').addEventListener('click',e=>{ if(e.target===document.getElementById('addModal')){document.getElementById('addModal').classList.remove('visible');document.body.style.overflow='';} });
+
+  document.getElementById('fSubmit').addEventListener('click', async ()=>{
+    const to=document.getElementById('fTo').value.trim();
+    const from=document.getElementById('fFrom').value.trim();
+    const date=document.getElementById('fDate').value;
+    const salutation=document.getElementById('fSalutation').value.trim();
+    const body=document.getElementById('fBody').value.trim();
+    const closing=document.getElementById('fClosing').value.trim();
+    const signature=document.getElementById('fSignature').value.trim();
+    if (!to&&!body){alert('Please fill in at least a recipient and body.');return;}
+    const newLetter={id:'letter-'+Date.now(),to,from,date,salutation:salutation||`Dear ${to},`,body,closing:closing||'Sincerely,',signature:signature||from};
+    setLoading(true);
+    await saveLetter(newLetter);
+    letters.unshift(newLetter);
+    setLoading(false);
+    ['fTo','fFrom','fSalutation','fBody','fClosing','fSignature'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('addModal').classList.remove('visible');
+    document.body.style.overflow='';
+    if (date){const[y,m]=date.split('-').map(Number);currentYear=y;currentMonth=m-1;}
+    renderCalendar();
+    renderLetterList();
+  });
+
+  // ===== LOADING STATE =====
+  function setLoading(on) {
+    document.getElementById('loadingOverlay').style.opacity = on ? '1' : '0';
+    document.getElementById('loadingOverlay').style.pointerEvents = on ? 'all' : 'none';
+  }
+
+  // ===== INIT =====
+  setLoading(true);
+  loadLetters().then(data => {
+    letters = data;
+    setLoading(false);
+    renderCalendar();
+    renderLetterList();
+  }).catch(err => {
+    setLoading(false);
+    document.getElementById('loadingOverlay').innerHTML = `
+      <div style="text-align:center;padding:40px;font-family:'Cinzel',serif;">
+        <div style="font-size:1rem;color:#c9962a;letter-spacing:0.15em;margin-bottom:12px;">CONNECTION FAILED</div>
+        <div style="font-size:0.75rem;color:rgba(245,240,208,0.6);max-width:340px;line-height:1.8;">
+          Firebase config may be missing or incorrect.<br>Check your API keys in the script block.
+        </div>
+        <div style="margin-top:16px;font-size:0.65rem;color:rgba(245,240,208,0.35);font-family:monospace;">${err.message}</div>
+      </div>`;
+    document.getElementById('loadingOverlay').style.opacity = '1';
+    document.getElementById('loadingOverlay').style.pointerEvents = 'all';
+    renderCalendar();
+    renderLetterList();
+  });
+</script>
+</body>
+</html>
