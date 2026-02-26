@@ -1059,33 +1059,10 @@
   const LETTERS_COL = 'letters';
 
   // ===== SEED LETTER =====
-  const FRANZINE_LETTER = {
-    id: 'seed-franzine-2026',
-    to: 'Franzine', from: 'Parker', date: '2026-02-24',
-    salutation: 'Dear Franzine,',
-    body: `If I could, I'd hand you this letter in person. But with thousands of miles between us, this felt like the next best thing. I want you to know that I'm not sending this expecting anything in return, and that I've chosen my words carefully, because I know the sweetest ones are often the ones that cause the most rot.
-
-I'm writing this letter to tell you how grateful I am to have you as a friend. I think because we've walked through such similar circumstances, you've been able to see me in ways I didn't think anyone could, and at first, that terrified me. I kept waiting for the moment you'd see my faults and the weight I carry and decide it was too much, the way others have. But you've done the exact opposite. You've welcomed me into your life and shown me a kindness I'm still learning to believe I deserve.
-
-I still don't fully understand why you've been so good to me, but I cherish it more than I know how to say. In such a short time, you've genuinely changed my life for the better. You've reassured me, trusted me with your own secrets, and given me the space to be myself without fear of judgment. I want to match you in every way you've been there for me, and give you even more.
-
-I know we've talked about how kind words and false actions have been used to manipulate and control you, so I completely understand if part of you still questions the things I do or the compliments I give. But I hope I've made it clear that I see you as my friend first always, and that anything kind I do comes from one place only: I love seeing you happy! I don't need any other reason besides that. If you can't believe me, that's okay, because I'm fine taking all the time and effort needed so you can feel safe in my presence.
-
-If you ever need something, never hesitate to reach out. If I ever do something that upsets you, tell me as soon as you can. If you want space, I'll give you all that you need. Whatever you want from our friendship I'll do what I can to accommodate you because I have nothing but respect and admiration for you.
-
-And once again, I expect absolutely nothing from you besides your companionship, so don't ever feel obligated to do anything for me in return or act a certain way just to keep me pleased. I'm gonna be here despite the distance, different timezones, and even if we end up upset at each other for some reason.
-
-I know this has been sappy, but the short of it is: thank you for being an amazing friend! I look forward to spending more time together and I hope that I can be a positive addition to your life like you have been for me!`,
-    closing: 'Sincerely,', signature: 'Parker'
-  };
+  // (none)
 
   async function loadLetters() {
     const snap = await getDocs(collection(db, LETTERS_COL));
-    if (snap.empty) {
-      // Seed the Franzine letter on first load
-      await setDoc(doc(db, LETTERS_COL, FRANZINE_LETTER.id), FRANZINE_LETTER);
-      return [FRANZINE_LETTER];
-    }
     return snap.docs.map(d => d.data()).sort((a,b) => (b.date||'').localeCompare(a.date||''));
   }
 
