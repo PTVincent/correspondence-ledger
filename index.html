@@ -735,9 +735,201 @@
     position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
   }
   .bg-ornaments svg { width: 100%; height: 100%; }
+  /* ============ LOCK SCREEN ============ */
+  #lockScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: var(--crimson);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  #lockScreen::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 30%, #7a1010 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, #3d0606 0%, transparent 55%);
+    pointer-events: none;
+  }
+  #lockScreen.unlocking {
+    opacity: 0;
+    transform: scale(1.04);
+    pointer-events: none;
+  }
+  .lock-box {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    width: 380px;
+    max-width: 90vw;
+  }
+  .lock-seal {
+    margin: 0 auto 24px;
+    display: block;
+    animation: sealPulse 3s ease-in-out infinite;
+  }
+  @keyframes sealPulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(201,150,42,0.3)); }
+    50%       { filter: drop-shadow(0 0 20px rgba(201,150,42,0.7)); }
+  }
+  .lock-title {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 3rem;
+    color: var(--parchment);
+    text-shadow: 0 2px 20px rgba(201,150,42,0.35);
+    margin-bottom: 4px;
+  }
+  .lock-subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+    color: var(--gold);
+    opacity: 0.75;
+    margin-bottom: 36px;
+    text-transform: uppercase;
+  }
+  .lock-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .lock-ornament-line {
+    height: 1px;
+    width: 80px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+  .lock-input-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .lock-input {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(201,150,42,0.35);
+    border-bottom: 2px solid rgba(201,150,42,0.6);
+    padding: 14px 48px 14px 18px;
+    font-family: 'IM Fell English', serif;
+    font-size: 1.1rem;
+    color: var(--parchment);
+    outline: none;
+    letter-spacing: 0.2em;
+    text-align: center;
+    border-radius: 2px;
+    transition: border-color 0.25s, background 0.25s;
+    box-sizing: border-box;
+  }
+  .lock-input::placeholder {
+    color: rgba(245,240,208,0.25);
+    letter-spacing: 0.15em;
+    font-style: italic;
+  }
+  .lock-input:focus {
+    background: rgba(0,0,0,0.45);
+    border-color: rgba(201,150,42,0.7);
+    border-bottom-color: var(--gold);
+  }
+  .lock-input.wrong {
+    animation: lockShake 0.4s ease;
+    border-color: rgba(200,50,50,0.7) !important;
+  }
+  @keyframes lockShake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-8px); }
+    40%      { transform: translateX(8px); }
+    60%      { transform: translateX(-5px); }
+    80%      { transform: translateX(5px); }
+  }
+  .lock-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(201,150,42,0.5);
+    padding: 4px;
+    transition: color 0.2s;
+  }
+  .lock-toggle:hover { color: var(--gold); }
+  .lock-error {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    color: rgba(220,80,80,0.85);
+    min-height: 18px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  .lock-btn {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(201,150,42,0.2), rgba(201,150,42,0.08));
+    border: 1px solid rgba(201,150,42,0.5);
+    color: var(--parchment);
+    padding: 14px 24px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.25s;
+  }
+  .lock-btn:hover {
+    background: linear-gradient(135deg, rgba(201,150,42,0.35), rgba(201,150,42,0.15));
+    border-color: var(--gold);
+    box-shadow: 0 4px 20px rgba(201,150,42,0.2);
+  }
 </style>
-</head>
 <body>
+
+<!-- =========== LOCK SCREEN =========== -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <svg class="lock-seal" width="72" height="72" viewBox="-36 -36 72 72" xmlns="http://www.w3.org/2000/svg">
+      <circle r="34" fill="none" stroke="#c9962a" stroke-width="1" stroke-dasharray="5 3" opacity="0.5"/>
+      <circle r="28" fill="none" stroke="#c9962a" stroke-width="0.6" opacity="0.4"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="11" fill="#c9962a" opacity="0.6"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="11" fill="#c9962a" opacity="0.6" transform="rotate(45)"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="11" fill="#c9962a" opacity="0.6" transform="rotate(90)"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="11" fill="#c9962a" opacity="0.6" transform="rotate(135)"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="11" fill="#c9962a" opacity="0.6" transform="rotate(180)"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="11" fill="#c9962a" opacity="0.6" transform="rotate(225)"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="11" fill="#c9962a" opacity="0.6" transform="rotate(270)"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="11" fill="#c9962a" opacity="0.6" transform="rotate(315)"/>
+      <circle r="14" fill="#c9962a" opacity="0.9"/>
+      <circle r="11" fill="none" stroke="#f5f0d0" stroke-width="0.8" opacity="0.5"/>
+      <!-- lock icon -->
+      <rect x="-5" y="-1" width="10" height="8" rx="1" fill="#f5f0d0" opacity="0.9"/>
+      <path d="M-3,-1 L-3,-4 A3,3 0 0,1 3,-4 L3,-1" fill="none" stroke="#f5f0d0" stroke-width="1.5" opacity="0.9"/>
+      <circle cx="0" cy="3" r="1.2" fill="#c9962a" opacity="0.9"/>
+    </svg>
+    <div class="lock-title">The Correspondence Ledger</div>
+    <div class="lock-subtitle">Private Collection</div>
+    <div class="lock-ornament">
+      <div class="lock-ornament-line"></div>
+      <svg width="10" height="10" viewBox="0 0 10 10"><polygon points="5,0 10,5 5,10 0,5" fill="#c9962a" opacity="0.8"/></svg>
+      <div class="lock-ornament-line"></div>
+    </div>
+    <div class="lock-input-wrap">
+      <input type="password" id="lockInput" class="lock-input" placeholder="passphrase" autocomplete="off" spellcheck="false">
+      <button class="lock-toggle" id="lockToggle" tabindex="-1" title="Show/hide">
+        <svg id="lockEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+    <div class="lock-error" id="lockError"></div>
+    <button class="lock-btn" id="lockBtn">Enter the Ledger</button>
+  </div>
+</div>
 
 <div class="bg-ornaments">
 <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -1161,9 +1353,56 @@
   import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   // =====================================================
-  //   PASTE YOUR FIREBASE CONFIG HERE
-  //   (from Firebase Console → Project Settings → Your apps)
+  //   SET YOUR PASSWORD HERE
   // =====================================================
+  const LEDGER_PASSWORD = 'changeme';
+  // =====================================================
+
+  // ===== LOCK SCREEN =====
+  const SESSION_KEY = 'ledger-unlocked';
+  const lockScreen  = document.getElementById('lockScreen');
+  const lockInput   = document.getElementById('lockInput');
+  const lockBtn     = document.getElementById('lockBtn');
+  const lockError   = document.getElementById('lockError');
+  const lockToggle  = document.getElementById('lockToggle');
+
+  function unlock() {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    lockScreen.classList.add('unlocking');
+    setTimeout(() => lockScreen.style.display = 'none', 800);
+  }
+
+  function tryUnlock() {
+    if (lockInput.value === LEDGER_PASSWORD) {
+      unlock();
+    } else {
+      lockError.textContent = 'Incorrect passphrase';
+      lockInput.classList.add('wrong');
+      lockInput.value = '';
+      setTimeout(() => lockInput.classList.remove('wrong'), 500);
+    }
+  }
+
+  // Stay unlocked for the browser session
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    lockScreen.style.display = 'none';
+  }
+
+  lockBtn.addEventListener('click', tryUnlock);
+  lockInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+  lockInput.addEventListener('input',   () => { lockError.textContent = ''; });
+
+  // Show/hide password toggle
+  lockToggle.addEventListener('click', () => {
+    const isPass = lockInput.type === 'password';
+    lockInput.type = isPass ? 'text' : 'password';
+    document.getElementById('lockEyeIcon').innerHTML = isPass
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  });
+
+  // Focus input when lock screen is visible
+  setTimeout(() => { if (lockScreen.style.display !== 'none') lockInput.focus(); }, 100);
   const firebaseConfig = {
     apiKey:            "AIzaSyAvqfZsBUqF9M1UyVxQfUvv03UxRLCGIiM",
     authDomain:        "letters-dd8ca.firebaseapp.com",
