@@ -927,7 +927,7 @@
       </button>
     </div>
     <div class="lock-error" id="lockError"></div>
-    <button class="lock-btn" id="lockBtn">Enter the Ledger</button>
+    <button type="button" class="lock-btn" id="lockBtn">Enter the Ledger</button>
   </div>
 </div>
 
@@ -1355,7 +1355,7 @@
   // =====================================================
   //   SET YOUR PASSWORD HERE
   // =====================================================
-  const LEDGER_PASSWORD = 'changeme';
+  const LEDGER_PASSWORD = '2026';
   // =====================================================
 
   // ===== LOCK SCREEN =====
@@ -1373,13 +1373,14 @@
   }
 
   function tryUnlock() {
-    if (lockInput.value === LEDGER_PASSWORD) {
+    const entered = lockInput.value.trim();
+    if (entered === LEDGER_PASSWORD) {
       unlock();
     } else {
       lockError.textContent = 'Incorrect passphrase';
       lockInput.classList.add('wrong');
       lockInput.value = '';
-      setTimeout(() => lockInput.classList.remove('wrong'), 500);
+      setTimeout(() => { lockInput.classList.remove('wrong'); lockInput.focus(); }, 500);
     }
   }
 
@@ -1389,7 +1390,7 @@
   }
 
   lockBtn.addEventListener('click', tryUnlock);
-  lockInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+  lockInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); tryUnlock(); } });
   lockInput.addEventListener('input',   () => { lockError.textContent = ''; });
 
   // Show/hide password toggle
