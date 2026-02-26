@@ -542,7 +542,54 @@
       linear-gradient(5deg, transparent 49.8%, rgba(160,130,70,0.1) 49.9%, transparent 50.1%);
     pointer-events: none;
   }
-  .border-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .border-svg { display: none; } /* replaced by CSS + corner approach */
+
+  /* Paper border via CSS — scales with content naturally */
+  .paper-border {
+    position: absolute;
+    inset: 14px;
+    border: 2.5px solid #1e3a8a;
+    border-radius: 3px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .paper-border::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px dashed rgba(30,58,138,0.55);
+    border-radius: 2px;
+  }
+  .paper-border::after {
+    content: '';
+    position: absolute;
+    inset: 16px;
+    border: 1.2px solid #1e3a8a;
+    border-radius: 1px;
+  }
+
+  /* Corner ornaments — absolutely positioned, never stretch */
+  .corner-ornament {
+    position: absolute;
+    width: 32px; height: 32px;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .corner-ornament.tl { top: 8px;  left: 8px; }
+  .corner-ornament.tr { top: 8px;  right: 8px;  transform: scaleX(-1); }
+  .corner-ornament.bl { bottom: 8px; left: 8px;  transform: scaleY(-1); }
+  .corner-ornament.br { bottom: 8px; right: 8px; transform: scale(-1,-1); }
+
+  /* Top/bottom center diamond */
+  .edge-ornament {
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .edge-ornament.top  { top: 8px; }
+  .edge-ornament.bot  { bottom: 8px; }
+
   .letter-content { position: relative; z-index: 1; }
   .letter-date {
     font-family: 'Pinyon Script', cursive;
@@ -551,6 +598,8 @@
     text-align: right;
     margin-bottom: 24px;
     opacity: 0.85;
+    position: relative;
+    z-index: 2;
   }
   .letter-salutation {
     font-family: 'Pinyon Script', cursive;
@@ -877,17 +926,64 @@
 <!-- LETTER VIEWER (inside modal flow) -->
 <div class="modal-overlay" id="viewModal">
   <div class="paper" id="viewPaper">
-    <svg class="border-svg" viewBox="0 0 680 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="14" y="14" width="652" height="872" rx="3" fill="none" stroke="#1e3a8a" stroke-width="2.5"/>
-      <rect x="22" y="22" width="636" height="856" rx="2" fill="none" stroke="#1e3a8a" stroke-width="0.8" stroke-dasharray="4 3"/>
-      <rect x="30" y="30" width="620" height="840" rx="1" fill="none" stroke="#1e3a8a" stroke-width="1.2"/>
-      <g transform="translate(14,14)"><circle cx="16" cy="16" r="5" fill="#1e3a8a"/><ellipse cx="16" cy="8" rx="3" ry="5" fill="#1e3a8a"/><ellipse cx="9" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="23" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/><circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/></g>
-      <g transform="translate(666,14) scale(-1,1)"><circle cx="16" cy="16" r="5" fill="#1e3a8a"/><ellipse cx="16" cy="8" rx="3" ry="5" fill="#1e3a8a"/><ellipse cx="9" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="23" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/><circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/></g>
-      <g transform="translate(14,886) scale(1,-1)"><circle cx="16" cy="16" r="5" fill="#1e3a8a"/><ellipse cx="16" cy="8" rx="3" ry="5" fill="#1e3a8a"/><ellipse cx="9" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="23" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/><circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/></g>
-      <g transform="translate(666,886) scale(-1,-1)"><circle cx="16" cy="16" r="5" fill="#1e3a8a"/><ellipse cx="16" cy="8" rx="3" ry="5" fill="#1e3a8a"/><ellipse cx="9" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="23" cy="16" rx="5" ry="3" fill="#1e3a8a"/><ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/><circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/></g>
-      <g transform="translate(340,14)"><polygon points="0,-10 7,0 0,10 -7,0" fill="#1e3a8a"/><polygon points="0,-6 4,0 0,6 -4,0" fill="#f5f0d0"/><path d="M-7,0 C-14,-6 -22,-4 -24,0 C-22,-2 -14,-1 -7,0Z" fill="#1e3a8a"/><path d="M7,0 C14,-6 22,-4 24,0 C22,-2 14,-1 7,0Z" fill="#1e3a8a"/><path d="M-7,0 C-14,6 -22,4 -24,0 C-22,2 -14,1 -7,0Z" fill="#1e3a8a"/><path d="M7,0 C14,6 22,4 24,0 C22,2 14,1 7,0Z" fill="#1e3a8a"/><circle cx="-50" cy="0" r="2" fill="#1e3a8a"/><circle cx="-60" cy="0" r="1.5" fill="#1e3a8a"/><circle cx="50" cy="0" r="2" fill="#1e3a8a"/><circle cx="60" cy="0" r="1.5" fill="#1e3a8a"/></g>
-      <g transform="translate(340,886)"><polygon points="0,-10 7,0 0,10 -7,0" fill="#1e3a8a"/><polygon points="0,-6 4,0 0,6 -4,0" fill="#f5f0d0"/><path d="M-7,0 C-14,-6 -22,-4 -24,0 C-22,-2 -14,-1 -7,0Z" fill="#1e3a8a"/><path d="M7,0 C14,-6 22,-4 24,0 C22,-2 14,-1 7,0Z" fill="#1e3a8a"/><path d="M-7,0 C-14,6 -22,4 -24,0 C-22,2 -14,1 -7,0Z" fill="#1e3a8a"/><path d="M7,0 C14,6 22,4 24,0 C22,2 14,1 7,0Z" fill="#1e3a8a"/><circle cx="-50" cy="0" r="2" fill="#1e3a8a"/><circle cx="-60" cy="0" r="1.5" fill="#1e3a8a"/><circle cx="50" cy="0" r="2" fill="#1e3a8a"/><circle cx="60" cy="0" r="1.5" fill="#1e3a8a"/></g>
-    </svg>
+  <div class="paper-border"></div>
+
+  <!-- Corner ornaments (never stretch) -->
+  <svg class="corner-ornament tl" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="5" fill="#1e3a8a"/>
+    <ellipse cx="16" cy="8"  rx="3" ry="5" fill="#1e3a8a"/>
+    <ellipse cx="8"  cy="16" rx="5" ry="3" fill="#1e3a8a"/>
+    <ellipse cx="24" cy="16" rx="5" ry="3" fill="#1e3a8a"/>
+    <ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/>
+    <circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/>
+  </svg>
+  <svg class="corner-ornament tr" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="5" fill="#1e3a8a"/>
+    <ellipse cx="16" cy="8"  rx="3" ry="5" fill="#1e3a8a"/>
+    <ellipse cx="8"  cy="16" rx="5" ry="3" fill="#1e3a8a"/>
+    <ellipse cx="24" cy="16" rx="5" ry="3" fill="#1e3a8a"/>
+    <ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/>
+    <circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/>
+  </svg>
+  <svg class="corner-ornament bl" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="5" fill="#1e3a8a"/>
+    <ellipse cx="16" cy="8"  rx="3" ry="5" fill="#1e3a8a"/>
+    <ellipse cx="8"  cy="16" rx="5" ry="3" fill="#1e3a8a"/>
+    <ellipse cx="24" cy="16" rx="5" ry="3" fill="#1e3a8a"/>
+    <ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/>
+    <circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/>
+  </svg>
+  <svg class="corner-ornament br" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="5" fill="#1e3a8a"/>
+    <ellipse cx="16" cy="8"  rx="3" ry="5" fill="#1e3a8a"/>
+    <ellipse cx="8"  cy="16" rx="5" ry="3" fill="#1e3a8a"/>
+    <ellipse cx="24" cy="16" rx="5" ry="3" fill="#1e3a8a"/>
+    <ellipse cx="16" cy="24" rx="3" ry="5" fill="#1e3a8a"/>
+    <circle cx="16" cy="16" r="2.5" fill="#f5f0d0"/>
+  </svg>
+
+  <!-- Top center diamond -->
+  <svg class="edge-ornament top" width="60" height="20" viewBox="0 0 60 20" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="30,2 37,10 30,18 23,10" fill="#1e3a8a"/>
+    <polygon points="30,6 34,10 30,14 26,10" fill="#f5f0d0"/>
+    <path d="M23,10 C16,5 8,6 6,10 C8,8 16,9 23,10Z" fill="#1e3a8a"/>
+    <path d="M37,10 C44,5 52,6 54,10 C52,8 44,9 37,10Z" fill="#1e3a8a"/>
+    <path d="M23,10 C16,15 8,14 6,10 C8,12 16,11 23,10Z" fill="#1e3a8a"/>
+    <path d="M37,10 C44,15 52,14 54,10 C52,12 44,11 37,10Z" fill="#1e3a8a"/>
+    <circle cx="4"  cy="10" r="2" fill="#1e3a8a"/>
+    <circle cx="56" cy="10" r="2" fill="#1e3a8a"/>
+  </svg>
+  <!-- Bottom center diamond -->
+  <svg class="edge-ornament bot" width="60" height="20" viewBox="0 0 60 20" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="30,2 37,10 30,18 23,10" fill="#1e3a8a"/>
+    <polygon points="30,6 34,10 30,14 26,10" fill="#f5f0d0"/>
+    <path d="M23,10 C16,5 8,6 6,10 C8,8 16,9 23,10Z" fill="#1e3a8a"/>
+    <path d="M37,10 C44,5 52,6 54,10 C52,8 44,9 37,10Z" fill="#1e3a8a"/>
+    <path d="M23,10 C16,15 8,14 6,10 C8,12 16,11 23,10Z" fill="#1e3a8a"/>
+    <path d="M37,10 C44,15 52,14 54,10 C52,12 44,11 37,10Z" fill="#1e3a8a"/>
+    <circle cx="4"  cy="10" r="2" fill="#1e3a8a"/>
+    <circle cx="56" cy="10" r="2" fill="#1e3a8a"/>
+  </svg>
     <div class="letter-content">
       <div class="letter-date" id="vDate"></div>
       <div class="letter-salutation" id="vSalutation"></div>
