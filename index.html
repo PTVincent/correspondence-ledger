@@ -523,7 +523,7 @@
     background-image:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.85  0 0 0 0 0.78  0 0 0 0 0.6  0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23paper)' opacity='1'/%3E%3C/svg%3E"),
       linear-gradient(135deg, rgba(200,180,100,0.15) 0%, rgba(220,200,140,0.08) 50%, rgba(200,180,100,0.12) 100%);
-    padding: 80px 70px 72px;
+    padding: 88px 70px 88px;
     box-shadow: 0 10px 60px rgba(0,0,0,0.7), inset 0 0 80px rgba(180,150,80,0.1);
     transform: rotate(-0.3deg) translateY(20px);
     opacity: 0;
@@ -583,12 +583,13 @@
   /* Top/bottom center diamond */
   .edge-ornament {
     position: absolute;
-    left: 50%; transform: translateX(-50%);
     z-index: 1;
     pointer-events: none;
   }
-  .edge-ornament.top  { top: 10px; }
-  .edge-ornament.bot  { bottom: 10px; }
+  .edge-ornament.top  { top: 10px;  left: 50%; transform: translateX(-50%); }
+  .edge-ornament.bot  { bottom: 10px; left: 50%; transform: translateX(-50%); }
+  .edge-ornament.left  { left: 10px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+  .edge-ornament.right { right: 10px; top: 50%; transform: translateY(-50%) rotate(90deg); }
 
   .letter-content { position: relative; z-index: 1; }
   .letter-date {
@@ -596,7 +597,7 @@
     font-size: 1.3rem;
     color: #2a3a6e;
     text-align: right;
-    margin-top: 12px;
+    margin-top: 0;
     margin-bottom: 28px;
     opacity: 0.85;
     position: relative;
@@ -985,6 +986,28 @@
     <circle cx="4"  cy="10" r="2" fill="#1e3a8a"/>
     <circle cx="56" cy="10" r="2" fill="#1e3a8a"/>
   </svg>
+  <!-- Left side diamond -->
+  <svg class="edge-ornament left" width="60" height="20" viewBox="0 0 60 20" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="30,2 37,10 30,18 23,10" fill="#1e3a8a"/>
+    <polygon points="30,6 34,10 30,14 26,10" fill="#f5f0d0"/>
+    <path d="M23,10 C16,5 8,6 6,10 C8,8 16,9 23,10Z" fill="#1e3a8a"/>
+    <path d="M37,10 C44,5 52,6 54,10 C52,8 44,9 37,10Z" fill="#1e3a8a"/>
+    <path d="M23,10 C16,15 8,14 6,10 C8,12 16,11 23,10Z" fill="#1e3a8a"/>
+    <path d="M37,10 C44,15 52,14 54,10 C52,12 44,11 37,10Z" fill="#1e3a8a"/>
+    <circle cx="4"  cy="10" r="2" fill="#1e3a8a"/>
+    <circle cx="56" cy="10" r="2" fill="#1e3a8a"/>
+  </svg>
+  <!-- Right side diamond -->
+  <svg class="edge-ornament right" width="60" height="20" viewBox="0 0 60 20" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="30,2 37,10 30,18 23,10" fill="#1e3a8a"/>
+    <polygon points="30,6 34,10 30,14 26,10" fill="#f5f0d0"/>
+    <path d="M23,10 C16,5 8,6 6,10 C8,8 16,9 23,10Z" fill="#1e3a8a"/>
+    <path d="M37,10 C44,5 52,6 54,10 C52,8 44,9 37,10Z" fill="#1e3a8a"/>
+    <path d="M23,10 C16,15 8,14 6,10 C8,12 16,11 23,10Z" fill="#1e3a8a"/>
+    <path d="M37,10 C44,15 52,14 54,10 C52,12 44,11 37,10Z" fill="#1e3a8a"/>
+    <circle cx="4"  cy="10" r="2" fill="#1e3a8a"/>
+    <circle cx="56" cy="10" r="2" fill="#1e3a8a"/>
+  </svg>
     <div class="letter-content">
       <div class="letter-date" id="vDate"></div>
       <div class="letter-salutation" id="vSalutation"></div>
@@ -993,7 +1016,7 @@
       <div class="letter-signature" id="vSignature"></div>
 
       <!-- Enclosed photograph -->
-      <div id="vPhotoWrap" style="display:none;margin-top:36px;text-align:center;">
+      <div id="vPhotoWrap" style="display:none;margin-top:36px;margin-bottom:8px;text-align:center;width:100%;overflow:hidden;">
         <div style="
           display:inline-block;
           padding:10px 10px 30px;
@@ -1001,11 +1024,13 @@
           box-shadow:2px 3px 12px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15);
           transform:rotate(-1.2deg);
           position:relative;
+          max-width:100%;
+          box-sizing:border-box;
         ">
           <img id="vPhoto" src="" alt="Enclosed photograph" style="
             display:block;
             max-width:100%;
-            max-height:340px;
+            max-height:380px;
             object-fit:contain;
             filter:sepia(0.18) contrast(1.04);
           ">
